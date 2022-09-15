@@ -18,7 +18,7 @@ $(1)_OBJ = $$(patsubst src/%,$(BUILD_DIR)/%.o, $$($(1)_SRC))
 $(1)_BIN = $(BUILD_DIR)/$$($(1)_NAME).elf
 
 DEPENDENCIES += $$($(1)_OBJ:.o=.d)
-ALL += $(1)_BIN
+ALL += $$($(1)_BIN)
 
 $$($(1)_BIN): $$($(1)_OBJ)
 	@$$(MKCWD)
@@ -30,6 +30,7 @@ $(foreach bin, $(SERVERS), $(eval $(call BIN_TEMPLATE,$(bin))))
 
 -include $(DEPENDENCIES)
 
+.DEFAULT_GOAL = all
 all: $(ALL)
 
 clean:

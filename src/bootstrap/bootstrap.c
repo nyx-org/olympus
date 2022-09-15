@@ -27,19 +27,37 @@ static void log(const char *str)
                      : "a"(0), "D"(str));
 }
 
-static void send_port(PortMessageHeader *message)
+static uint32_t alloc_port(uint8_t rights)
 {
+    uint32_t ret;
     __asm__ volatile("int $0x42"
-                     :
-                     : "a"(2), "D"(message));
+                     : "=a"(ret)
+                     : "a"(1), "D"(rights));
+    return ret;
 }
 
-static int get_port(uint8_t index)
+static int recv_port(uint32_t port, PortMessageHeader *message, uint64_t bytes)
 {
     int ret;
     __asm__ volatile("int $0x42"
                      : "=a"(ret)
-                     : "a"(6), "D"(index));
+                     : "a"(3), "D"(port), "S"(message), "d"(bytes));
+    return ret;
+}
+
+static void register_port(uint32_t port, uint8_t index)
+{
+    __asm__ volatile("int $0x42"
+                     :
+                     : "a"(5), "D"(port), "S"(index));
+}
+
+static int spawn(const char *name)
+{
+    int ret;
+    __asm__ volatile("int $0x42"
+                     : "=a"(ret)
+                     : "a"(4), "D"(name));
     return ret;
 }
 
@@ -70,22 +88,25 @@ void *memcpy(void *dest, const void *src, uint64_t n)
 
 void _start()
 {
-    log("Hello I am 'hello'");
+
+    // We can receive and send from/to this port
+    uint32_t name = alloc_port(PORT_RIGHT_RECV | PORT_RIGHT_SEND);
+
+    register_port(PORT_BOOTSTRAP, name);
+
+    log("Spawning hello...");
+    spawn("/hello");
 
     MyMessage message;
-    message.header.dest = get_port(PORT_BOOTSTRAP);
-    message.header.type = PORT_MSG_TYPE_DEFAULT;
-    message.header.size = sizeof(message);
-    message.character = 'h';
-    message.str[0] = 'h';
-    message.str[1] = 'e';
-    message.str[2] = 'l';
-    message.str[3] = 'l';
-    message.str[4] = 'o';
-    message.str[5] = '\0';
+    int found = 0;
 
-    log("Sending str \"hello\"");
+    while (!found)
+    {
+        found = recv_port(name, &message.header, sizeof(message));
+    }
 
-    send_port(&message.header);
+    log("Got message: ");
+    log(message.str);
+
     exit();
 }
