@@ -27,7 +27,7 @@ void gaia_register_common_port(uint8_t index, GaiaPort port)
 {
     __asm__ volatile("int $0x42"
                      :
-                     : "a"(GAIA_SYS_REGISTER_PORT), "D"(port), "S"(index));
+                     : "a"(GAIA_SYS_REGISTER_PORT), "D"(index), "S"(port));
 }
 
 GaiaPort gaia_get_common_port(uint8_t index)
