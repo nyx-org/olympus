@@ -11,7 +11,7 @@ $(1)_NAME = $$(shell echo $(1) | tr A-Z a-z)
 
 $(1)_PKG = src/$$($(1)_NAME)
 
-$(1)_SRC = $$(wildcard $$($(1)_PKG)/*.c)
+$(1)_SRC = $$(wildcard $$($(1)_PKG)/*.c) src/gaia.c
 
 $(1)_OBJ = $$(patsubst src/%,$(BUILD_DIR)/%.o, $$($(1)_SRC))
 
