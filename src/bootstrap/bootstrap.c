@@ -34,11 +34,12 @@ void _start(void)
     gaia_spawn_module("/hello");
 
     MyMessage message = {0};
-    message.empty = 1;
 
-    while (message.empty)
+    int bytes_received = 0;
+
+    while (bytes_received == 0)
     {
-        gaia_msg(PORT_RECV, name, sizeof(message), &message.header);
+        bytes_received = gaia_msg(PORT_RECV, name, sizeof(message), &message.header);
     }
 
     gaia_log("Got message: ");

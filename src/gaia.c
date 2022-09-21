@@ -7,11 +7,13 @@ void gaia_log(const char *str)
                      : "a"(GAIA_SYS_LOG), "D"(str));
 }
 
-void gaia_msg(uint8_t type, GaiaPort port_to_receive, size_t bytes_to_receive, GaiaMessageHeader *msg)
+size_t gaia_msg(uint8_t type, GaiaPort port_to_receive, size_t bytes_to_receive, GaiaMessageHeader *msg)
 {
+    size_t ret;
     __asm__ volatile("int $0x42"
-                     :
+                     : "=a"(ret)
                      : "a"(GAIA_SYS_MSG), "D"(type), "S"(port_to_receive), "d"(bytes_to_receive), "rcx"(msg));
+    return ret;
 }
 
 GaiaPort gaia_allocate_port(uint8_t rights)

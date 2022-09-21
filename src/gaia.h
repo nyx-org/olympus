@@ -40,7 +40,7 @@ typedef struct __attribute__((packed))
 } GaiaMessageHeader;
 
 void gaia_log(const char *str);
-void gaia_msg(uint8_t type, GaiaPort port_to_receive, size_t bytes_to_receive, GaiaMessageHeader *msg);
+size_t gaia_msg(uint8_t type, GaiaPort port_to_receive, size_t bytes_to_receive, GaiaMessageHeader *msg);
 
 GaiaPort gaia_allocate_port(uint8_t rights);
 void gaia_register_common_port(uint8_t index, GaiaPort port);
