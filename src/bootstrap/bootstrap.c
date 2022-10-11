@@ -49,6 +49,17 @@ typedef struct PACKED
 #define ALIGN_DOWN(x, align) ((x) & ~((align)-1))
 #define DIV_CEIL(x, align) (((x) + (align)-1) / (align))
 
+void *memset(void *ptr, int c, size_t n)
+{
+
+    for (size_t i = 0; i < n; i++)
+    {
+        ((char *)ptr)[i] = c;
+    }
+
+    return ptr;
+}
+
 uintptr_t elf_load(void *elf_buffer, GaiaTask *task)
 {
     Elf64Header *header = (Elf64Header *)elf_buffer;
