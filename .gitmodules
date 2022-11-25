@@ -1,0 +1,3 @@
+[submodule "ichor"]
+	path = ichor
+	url = https://github.com/nyx-org/ichor

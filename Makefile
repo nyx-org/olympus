@@ -11,7 +11,7 @@ $(1)_NAME = $$(shell echo $(1) | tr A-Z a-z)
 
 $(1)_PKG = src/$$($(1)_NAME)
 
-$(1)_SRC = $$(wildcard $$($(1)_PKG)/*.c) src/gaia.c
+$(1)_SRC = $$(wildcard $$($(1)_PKG)/*.c)
 
 $(1)_OBJ = $$(patsubst src/%,$(BUILD_DIR)/%.o, $$($(1)_SRC))
 
@@ -22,7 +22,7 @@ ALL += $$($(1)_BIN)
 
 $$($(1)_BIN): $$($(1)_OBJ)
 	@$$(MKCWD)
-	$(LD) $(LINK_FLAGS) -o $$@ $$($(1)_OBJ)
+	$(LD) $(LINK_FLAGS) -o $$@ $$($(1)_OBJ) ichor/build/syscalls.c.o
 
 endef
 
@@ -30,8 +30,13 @@ $(foreach bin, $(SERVERS), $(eval $(call BIN_TEMPLATE,$(bin))))
 
 -include $(DEPENDENCIES)
 
+ICHOR = ichor/build/libichor.a
+
+$(ICHOR):
+	$(MAKE) -C ichor
+
 .DEFAULT_GOAL = all
-all: $(ALL)
+all: $(ICHOR) $(ALL)
 
 clean:
 	rm -rf $(BUILD_DIR)

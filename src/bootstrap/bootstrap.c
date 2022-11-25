@@ -1,15 +1,14 @@
-#include <gaia.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <ichor/syscalls.h>
 
 typedef struct __attribute__((packed))
 {
-    GaiaMessageHeader header;
+    PortMessageHeader header;
     int empty;
     char character;
     char str[15];
 } MyMessage;
+
+#define PACKED __attribute__((packed))
 
 typedef struct PACKED
 {
@@ -41,6 +40,60 @@ typedef struct PACKED
     uint64_t p_align;
 } Elf64ProgramHeader;
 
+#define CHARON_MODULE_MAX 16
+#define CHARON_MMAP_SIZE_MAX 128
+
+typedef enum
+{
+    MMAP_FREE,
+    MMAP_RESERVED,
+    MMAP_MODULE,
+    MMAP_RECLAIMABLE,
+    MMAP_FRAMEBUFFER
+} CharonMemoryMapEntryType;
+
+typedef struct PACKED
+{
+
+    uintptr_t base;
+    size_t size;
+    CharonMemoryMapEntryType type;
+} CharonMemoryMapEntry;
+
+typedef struct PACKED
+{
+    uint8_t count;
+    CharonMemoryMapEntry entries[CHARON_MMAP_SIZE_MAX];
+} CharonMemoryMap;
+
+typedef struct PACKED
+{
+    bool present;
+    uintptr_t address;
+    uint32_t width, height, pitch, bpp;
+} CharonFramebuffer;
+
+typedef struct PACKED
+{
+    uint32_t size;
+    uintptr_t address;
+    const char name[16];
+} CharonModule;
+
+typedef struct PACKED
+{
+    uint8_t count;
+    CharonModule modules[CHARON_MODULE_MAX];
+} CharonModules;
+
+typedef struct PACKED
+{
+    uintptr_t rsdp;
+    CharonFramebuffer framebuffer;
+    CharonModules modules;
+    CharonMemoryMap memory_map;
+} Charon;
+
 #define PT_LOAD 0x00000001
 #define PT_INTERP 0x00000003
 #define PT_PHDR 0x00000006
@@ -60,9 +113,16 @@ void *memset(void *ptr, int c, size_t n)
     return ptr;
 }
 
-uintptr_t elf_load(void *elf_buffer, GaiaTask *task)
+uintptr_t elf_load(void *elf_buffer, Task *task)
 {
     Elf64Header *header = (Elf64Header *)elf_buffer;
+
+    if (header->e_ident[0] != 0x7F || header->e_ident[1] != 'E' || header->e_ident[2] != 'L' || header->e_ident[3] != 'F')
+    {
+        sys_log("Bruh not an elf");
+        return 0;
+    }
+
     Elf64ProgramHeader *program_header = (Elf64ProgramHeader *)((uintptr_t)elf_buffer + header->e_phoff);
 
     for (int i = 0; i < header->e_phnum; i++)
@@ -74,8 +134,9 @@ uintptr_t elf_load(void *elf_buffer, GaiaTask *task)
 
             for (size_t i = 0; i < page_count; i++)
             {
-                gaia_vm_map(task->space, PROT_READ | PROT_WRITE | PROT_EXEC, MMAP_FIXED, (void *)program_header->p_vaddr, NULL, 4096);
-                gaia_vm_write(task->space, program_header->p_vaddr, (void *)(elf_buffer + program_header->p_offset), program_header->p_filesz);
+                VmObject obj = sys_vm_create(4096, 0, 0);
+                sys_vm_map(task->space, &obj, VM_PROT_READ | VM_PROT_WRITE | VM_PROT_EXEC, program_header->p_vaddr, VM_MAP_FIXED);
+                sys_vm_write(task->space, program_header->p_vaddr, (void *)(elf_buffer + program_header->p_offset), program_header->p_filesz);
             }
         }
 
@@ -85,45 +146,45 @@ uintptr_t elf_load(void *elf_buffer, GaiaTask *task)
     return header->e_entry;
 }
 
-#define USER_STACK_TOP 0x7fffffffe000
 void _start(Charon *charon)
 {
+    Port port;
+    Task task;
+    VmObject obj;
+    uintptr_t entry;
+    MyMessage message;
 
     // We can receive and send from/to this port
-    GaiaPort name = gaia_allocate_port(PORT_RIGHT_RECV | PORT_RIGHT_SEND);
+    port = sys_alloc_port(PORT_RIGHT_RECV | PORT_RIGHT_SEND);
 
-    gaia_register_common_port(PORT_BOOTSTRAP, name);
+    sys_register_common_port(PORT_COMMON_BOOTSTRAP, port);
 
-    gaia_log("Spawning hello...");
+    sys_log("Spawning first task..");
 
     for (size_t i = 0; i < charon->modules.count; i++)
     {
-        gaia_log(charon->modules.modules[i].name);
+        sys_log(charon->modules.modules[i].name);
     }
 
-    GaiaTask task;
+    task = sys_create_task();
 
-    gaia_create_task(&task);
+    obj = sys_vm_create(charon->modules.modules[0].size, charon->modules.modules[0].address, VM_MEM_DMA);
 
-    void *elf = gaia_vm_map(NULL, PROT_READ | PROT_WRITE, MMAP_PHYS, NULL, (void *)charon->modules.modules[0].address, charon->modules.modules[0].size);
+    sys_vm_map(NULL, &obj, VM_PROT_READ | VM_PROT_WRITE, 0, VM_MAP_ANONYMOUS | VM_MAP_PHYS);
 
-    uintptr_t entry = elf_load(elf, &task);
+    entry = elf_load(obj.buf, &task);
 
-    gaia_start_task(&task, entry, USER_STACK_TOP, true);
-
-    gaia_log("spawned first task");
-
-    MyMessage message = {0};
+    sys_start_task(&task, entry);
 
     int bytes_received = 0;
 
     while (bytes_received == 0)
     {
-        bytes_received = gaia_msg(PORT_RECV, name, sizeof(message), &message.header);
+        bytes_received = sys_msg(PORT_RECV, port, sizeof(message), &message.header);
     }
 
-    gaia_log("Got message: ");
-    gaia_log(message.str);
+    sys_log("Got message: ");
+    sys_log(message.str);
 
-    gaia_exit(0);
+    sys_exit(0);
 }
