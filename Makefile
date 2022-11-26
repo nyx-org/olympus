@@ -22,7 +22,7 @@ ALL += $$($(1)_BIN)
 
 $$($(1)_BIN): $$($(1)_OBJ)
 	@$$(MKCWD)
-	$(LD) $(LINK_FLAGS) -o $$@ $$($(1)_OBJ) ichor/build/syscalls.c.o
+	$(LD) $(LINK_FLAGS) -o $$@ $$($(1)_OBJ) ichor/build/syscalls.c.o ichor/build/exec.c.o
 
 endef
 
