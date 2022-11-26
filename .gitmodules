@@ -1,3 +1,6 @@
 [submodule "ichor"]
 	path = ichor
 	url = https://github.com/nyx-org/ichor
+[submodule "stdc-shim"]
+	path = stdc-shim
+	url = https://github.com/nyx-org/stdc-shim
