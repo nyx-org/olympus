@@ -1,5 +1,6 @@
 #include <ichor/port.h>
 #include <ichor/syscalls.h>
+#include <stdc-shim/string.h>
 
 typedef struct __attribute__((packed))
 {
@@ -19,12 +20,10 @@ void _start()
     message.header.size = sizeof(message);
     message.character = 'h';
     message.empty = 0;
-    message.str[0] = 'h';
-    message.str[1] = 'e';
-    message.str[2] = 'l';
-    message.str[3] = 'l';
-    message.str[4] = 'o';
-    message.str[5] = '\0';
+
+    char *str = "hello world";
+
+    memcpy(message.str, str, strlen(str));
 
     sys_log("Sending str \"hello\"");
 

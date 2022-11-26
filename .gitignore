@@ -1,2 +1,4 @@
 build
 *.o
+src/stdlib.c
+src/string.c

@@ -3,3 +3,4 @@
 -Wextra
 -Werror
 -Iichor/include
+-Istdc-shim/include

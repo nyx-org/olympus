@@ -5,13 +5,15 @@ $(BUILD_DIR)/%.c.o: src/%.c
 	@$(MKCWD)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
+ICHOR_OBJS = $(wildcard ichor/build/*.o)
+
 define BIN_TEMPLATE
 
 $(1)_NAME = $$(shell echo $(1) | tr A-Z a-z)
 
 $(1)_PKG = src/$$($(1)_NAME)
 
-$(1)_SRC = $$(wildcard $$($(1)_PKG)/*.c)
+$(1)_SRC = $$(wildcard $$($(1)_PKG)/*.c) $(wildcard src/*.c)
 
 $(1)_OBJ = $$(patsubst src/%,$(BUILD_DIR)/%.o, $$($(1)_SRC))
 
@@ -20,9 +22,12 @@ $(1)_BIN = $(BUILD_DIR)/$$($(1)_NAME).elf
 DEPENDENCIES += $$($(1)_OBJ:.o=.d)
 ALL += $$($(1)_BIN)
 
-$$($(1)_BIN): $(ICHOR) $$($(1)_OBJ)
+cp-stdc-shim:
+	cp -r stdc-shim/src/*.c src/
+
+$$($(1)_BIN): cp-stdc-shim $(ICHOR) $$($(1)_OBJ)
 	@$$(MKCWD)
-	$(LD) $(LINK_FLAGS) -o $$@ $$($(1)_OBJ) ichor/build/syscalls.c.o ichor/build/exec.c.o
+	$(LD) $(LINK_FLAGS) -o $$@ $$($(1)_OBJ) ichor/build/libichor.a
 
 endef
 
