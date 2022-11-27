@@ -2,5 +2,5 @@
 -Wall
 -Wextra
 -Werror
--Iichor/include
--Istdc-shim/include
+-Isubprojects/ichor/include
+-Isubprojects/stdc-shim/include

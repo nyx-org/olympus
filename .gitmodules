@@ -4,3 +4,9 @@
 [submodule "stdc-shim"]
 	path = stdc-shim
 	url = https://github.com/nyx-org/stdc-shim
+[submodule "subprojects/stdc-shim"]
+	path = subprojects/stdc-shim
+	url = https://github.com/nyx-org/stdc-shim
+[submodule "subprojects/ichor"]
+	path = subprojects/ichor
+	url = https://github.com/nyx-org/ichor
