@@ -1,7 +1,7 @@
-#include "ichor/error.h"
-#include "ichor/rights.h"
 #include <ichor/charon.h>
 #include <ichor/elf.h>
+#include <ichor/error.h>
+#include <ichor/rights.h>
 #include <ichor/syscalls.h>
 #include <stdc-shim/string.h>
 
