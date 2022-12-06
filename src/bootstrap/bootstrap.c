@@ -1,3 +1,6 @@
+#include "ichor/error.h"
+#include "ichor/rights.h"
+#include <ichor/charon.h>
 #include <ichor/elf.h>
 #include <ichor/syscalls.h>
 #include <stdc-shim/string.h>
@@ -9,62 +12,6 @@ typedef struct __attribute__((packed))
     char character;
     char str[15];
 } MyMessage;
-
-#define PACKED __attribute__((packed))
-
-#define CHARON_MODULE_MAX 16
-#define CHARON_MMAP_SIZE_MAX 128
-
-typedef enum
-{
-    MMAP_FREE,
-    MMAP_RESERVED,
-    MMAP_MODULE,
-    MMAP_RECLAIMABLE,
-    MMAP_FRAMEBUFFER
-} CharonMemoryMapEntryType;
-
-typedef struct PACKED
-{
-
-    uintptr_t base;
-    size_t size;
-    CharonMemoryMapEntryType type;
-} CharonMemoryMapEntry;
-
-typedef struct PACKED
-{
-    uint8_t count;
-    CharonMemoryMapEntry entries[CHARON_MMAP_SIZE_MAX];
-} CharonMemoryMap;
-
-typedef struct PACKED
-{
-    bool present;
-    uintptr_t address;
-    uint32_t width, height, pitch, bpp;
-} CharonFramebuffer;
-
-typedef struct PACKED
-{
-    uint32_t size;
-    uintptr_t address;
-    const char name[16];
-} CharonModule;
-
-typedef struct PACKED
-{
-    uint8_t count;
-    CharonModule modules[CHARON_MODULE_MAX];
-} CharonModules;
-
-typedef struct PACKED
-{
-    uintptr_t rsdp;
-    CharonFramebuffer framebuffer;
-    CharonModules modules;
-    CharonMemoryMap memory_map;
-} Charon;
 
 void _start(Charon *charon)
 {
@@ -85,13 +32,42 @@ void _start(Charon *charon)
         sys_log(charon->modules.modules[i].name);
     }
 
-    task = sys_create_task();
+    task = sys_create_task(RIGHT_NULL);
+
+    if (sys_errno != ERR_SUCCESS)
+    {
+        sys_log("failed to create task");
+    }
+
+    sys_vm_register_dma_region(NULL, charon->modules.modules[0].address, charon->modules.modules[0].size, 0);
+
+    if (sys_errno != ERR_SUCCESS)
+    {
+        sys_log("failed to register dma region");
+    }
 
     obj = sys_vm_create(charon->modules.modules[0].size, charon->modules.modules[0].address, VM_MEM_DMA);
 
-    sys_vm_map(NULL, &obj, VM_PROT_READ | VM_PROT_WRITE, 0, VM_MAP_ANONYMOUS | VM_MAP_PHYS);
+    if (sys_errno != ERR_SUCCESS)
+    {
+        sys_log("failed to create vm object");
+    }
 
-    ichor_exec_elf(&task, obj.buf);
+    sys_vm_map(NULL, &obj, VM_PROT_READ | VM_PROT_WRITE, 0, VM_MAP_ANONYMOUS | VM_MAP_DMA);
+
+    if (sys_errno != ERR_SUCCESS)
+    {
+        sys_log("failed to map vm object");
+    }
+
+    if (ichor_exec_elf(&task, obj.buf) != ERR_SUCCESS)
+    {
+        sys_log("Failed to spawn task.. hanging");
+        sys_exit(-1);
+        while (true)
+        {
+        }
+    }
 
     int bytes_received = 0;
 
