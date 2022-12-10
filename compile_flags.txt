@@ -3,4 +3,4 @@
 -Wextra
 -Werror
 -Isubprojects/ichor/include
--Isubprojects/stdc-shim/include
+-Isubprojects/ichor/subprojects/stdc-shim/include
