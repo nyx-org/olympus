@@ -10,3 +10,6 @@
 [submodule "subprojects/ichor"]
 	path = subprojects/ichor
 	url = https://github.com/nyx-org/ichor
+[submodule "subprojects/hermes"]
+	path = subprojects/hermes
+	url = https://github.com/nyx-org/hermes

@@ -1,0 +1,5 @@
+@common_port 0
+interface Bootstrap {
+    i32 register_server(string256 name, Port port),
+    Port look_up(string256 name)
+}
