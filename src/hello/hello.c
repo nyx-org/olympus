@@ -8,7 +8,6 @@ void _start()
 {
     Port port = sys_alloc_port(PORT_RIGHT_RECV | PORT_RIGHT_SEND);
 
-    ichor_debug("registering 'hello'");
     bootstrap_register_server("org.nyx.hello", port);
 
     sys_free_port(port);
