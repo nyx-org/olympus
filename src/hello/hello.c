@@ -4,7 +4,7 @@
 #include <ichor/syscalls.h>
 #include <stdc-shim/string.h>
 
-void _start()
+void server_main()
 {
     Port port = sys_alloc_port(PORT_RIGHT_RECV | PORT_RIGHT_SEND);
 

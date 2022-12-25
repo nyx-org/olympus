@@ -17,10 +17,10 @@ typedef struct
 
 #define CHECK_ERRNO() (sys_errno == ERR_SUCCESS ? (void)0 : ichor_debug("Error: %d", sys_errno))
 
-static void execute_task(CharonModule *module)
+static void execute_task(CharonModule *module, Rights rights)
 {
-    VmObject obj;
-    Task task = sys_create_task(RIGHT_NULL);
+    VmObject obj = {0};
+    Task task = sys_create_task(rights);
 
     CHECK_ERRNO();
 
@@ -82,10 +82,10 @@ static void server_loop(Port port)
     }
 }
 
-void _start(Charon *charon)
+void server_main(Charon *charon)
 {
     Port port;
-    CharonModule *module = NULL;
+    CharonModule *hello_module = NULL, *vfs_module = NULL;
 
     // We can receive and send from/to this port
     port = sys_alloc_port(PORT_RIGHT_RECV | PORT_RIGHT_SEND);
@@ -98,19 +98,26 @@ void _start(Charon *charon)
     {
         if (strncmp(charon->modules.modules[i].name, "/hello.elf", 10) == 0)
         {
-            module = &charon->modules.modules[i];
-            ichor_debug("Found hello.elf module! Starting task..");
-            break;
+            hello_module = &charon->modules.modules[i];
         }
+
+        if (strncmp(charon->modules.modules[i].name, "/vfs.elf", strlen("/vfs.elf")) == 0)
+        {
+            vfs_module = &charon->modules.modules[i];
+        }
+
+        if (hello_module && vfs_module)
+            break;
     }
 
-    if (!module)
+    if (!hello_module)
     {
-        ichor_debug("Failed to find hello.elf module.. hanging");
+        ichor_debug("Failed to find module.. hanging");
         sys_exit(-1);
     }
 
-    execute_task(module);
+    execute_task(hello_module, RIGHT_NULL);
+    execute_task(vfs_module, RIGHT_DMA | RIGHT_REGISTER_DMA);
 
     server_loop(port);
 

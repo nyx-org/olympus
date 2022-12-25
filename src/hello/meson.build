@@ -1,3 +1,5 @@
 sources = files('hello.c')
 
-executable('hello.elf', sources, generated_protos, dependencies: deps)
+sources += base_files
+
+executable('hello.elf', sources, dependencies: deps)

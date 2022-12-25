@@ -1,0 +1,4 @@
+interface Vfs {
+    i32 open(string256 name, u16 access),
+    i32 close(i32 fd)
+}
