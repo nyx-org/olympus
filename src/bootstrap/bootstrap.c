@@ -15,6 +15,9 @@ typedef struct
     Port port;
 } Binding;
 
+static Binding bindings[64];
+static size_t binding_count = 0;
+
 #define CHECK_ERRNO() (sys_errno == ERR_SUCCESS ? (void)0 : ichor_debug("Error: %d", sys_errno))
 
 static void execute_task(CharonModule *module, Rights rights)
@@ -43,15 +46,42 @@ static void execute_task(CharonModule *module, Rights rights)
 
 static int register_server(BootstrapReq req, BootstrapResponse *resp)
 {
-    ichor_debug("register_server(%s, %d)", req.requests.register_server.name, req.header.port_right);
-    resp->_data.i32_val = 0;
+    Binding new_binding;
+
+    strncpy(new_binding.name, req.requests.register_server.name, strlen(req.requests.register_server.name));
+    new_binding.port = req.header.port_right;
+
+    bindings[binding_count++] = new_binding;
+
+    resp->_data.i32_val = ERR_SUCCESS;
     return ERR_SUCCESS;
 }
 
 static int look_up(BootstrapReq req, BootstrapResponse *resp)
 {
-    ichor_debug("look_up(%s)", req.requests.look_up.name);
-    resp->_data.i32_val = 0;
+    bool found = false;
+
+    resp->header.type = PORT_MSG_TYPE_RIGHT;
+
+    for (size_t i = 0; i < binding_count; i++)
+    {
+        if (!strncmp(bindings[i].name, req.requests.look_up.name, strlen(req.requests.look_up.name)))
+        {
+            resp->header.port_right = bindings[i].port;
+            found = true;
+            break;
+        }
+    }
+
+    if (found)
+    {
+        resp->_data.i32_val = resp->header.port_right;
+    }
+    else
+    {
+        resp->header.port_right = PORT_NULL;
+    }
+
     return ERR_SUCCESS;
 }
 
@@ -101,7 +131,7 @@ void server_main(Charon *charon)
             hello_module = &charon->modules.modules[i];
         }
 
-        if (strncmp(charon->modules.modules[i].name, "/vfs.elf", strlen("/vfs.elf")) == 0)
+        if (strncmp(charon->modules.modules[i].name, "/posix.elf", strlen("/posix.elf")) == 0)
         {
             vfs_module = &charon->modules.modules[i];
         }
