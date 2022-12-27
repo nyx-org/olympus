@@ -1,0 +1,1 @@
+sources += files('tar.c', 'vfs.c', 'tmpfs.c', 'fd.c')

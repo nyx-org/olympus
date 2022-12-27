@@ -1,0 +1,4 @@
+interface Posix {
+    i32 open(string256 name, i16 mode),
+    i32 close(i32 fd)
+}

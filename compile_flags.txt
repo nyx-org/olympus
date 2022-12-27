@@ -5,3 +5,4 @@
 -Isubprojects/ichor/include
 -Isubprojects/ichor/subprojects/stdc-shim/include
 -I../nyx-2/build/subprojects/olympus/protos/libprotos.a.p
+-Isrc/posix/include

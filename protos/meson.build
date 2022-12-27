@@ -1,4 +1,4 @@
-protos = files('bootstrap.idl', 'vfs.idl')
+protos = files('bootstrap.idl', 'posix.idl')
 prog_python = import('python').find_installation('python3')
 
 gen = generator(prog_python, 
