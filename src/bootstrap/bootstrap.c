@@ -24,10 +24,15 @@ static void execute_task(CharonModule *module, Rights rights)
 {
     VmObject obj = {0};
     Task task = sys_create_task(rights);
+    Task my_task;
 
     CHECK_ERRNO();
 
-    sys_vm_register_dma_region(NULL, module->address, module->size, 0);
+    sys_get_current_task(&my_task);
+
+    CHECK_ERRNO();
+
+    sys_vm_register_dma_region(my_task.space, module->address, module->size, 0);
 
     CHECK_ERRNO();
 
@@ -35,7 +40,7 @@ static void execute_task(CharonModule *module, Rights rights)
 
     CHECK_ERRNO();
 
-    sys_vm_map(NULL, &obj, VM_PROT_READ | VM_PROT_WRITE, 0, VM_MAP_ANONYMOUS | VM_MAP_DMA);
+    sys_vm_map(my_task.space, &obj, VM_PROT_READ | VM_PROT_WRITE, 0, VM_MAP_ANONYMOUS | VM_MAP_DMA);
 
     if (ichor_exec_elf(&task, obj.buf) != ERR_SUCCESS)
     {

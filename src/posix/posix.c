@@ -97,19 +97,81 @@ static int seek(PosixReq request, PosixResponse *resp)
     return 0;
 }
 
+static int close(PosixReq request, PosixResponse *resp)
+{
+    RESP_VAL(resp, i32) = posix_sys_close(procs[REQ_MEMBER(close, pid)], REQ_MEMBER(close, fd));
+    return 0;
+}
+
+//
+static int readdir(PosixReq request, PosixResponse *resp)
+{
+    void *buf = (void *)(GET_SHMD(request, requests.readdir.buf).address);
+    void *bytes_read = (void *)(GET_SHMD(request, requests.readdir.bytes_read).address);
+
+    RESP_VAL(resp, i32) = posix_sys_readdir(procs[REQ_MEMBER(readdir, pid)], REQ_MEMBER(readdir, fd), buf, REQ_MEMBER(readdir, buf_size), bytes_read);
+    return 0;
+}
+
+#define PROT_NONE 0x00
+#define PROT_READ 0x01
+#define PROT_WRITE 0x02
+#define PROT_EXEC 0x04
+
+#define MAP_FAILED ((void *)(-1))
+#define MAP_FILE 0x00
+#define MAP_SHARED 0x01
+#define MAP_PRIVATE 0x02
+#define MAP_FIXED 0x10
+#define MAP_ANON 0x20
+#define MAP_ANONYMOUS 0x20
+
+static int mmap(PosixReq request, PosixResponse *resp)
+{
+    PosixMmapReq req = request.requests.mmap;
+
+    void **out = (void **)(GET_SHMD(request, requests.mmap.out).address);
+
+    VmObject obj;
+    obj.size = req.size;
+    size_t actual_flags = req.flags & 0xFFFFFFFF;
+
+    ichor_debug("Hi");
+    if (actual_flags & MAP_ANONYMOUS)
+    {
+        uint16_t gaia_prot = 0;
+
+        if (req.prot & PROT_READ)
+            gaia_prot |= VM_PROT_READ;
+        if (req.prot & PROT_WRITE)
+            gaia_prot |= VM_PROT_WRITE;
+        if (req.prot & PROT_EXEC)
+            gaia_prot |= VM_PROT_EXEC;
+
+        sys_vm_map(req.space, &obj, gaia_prot, (uintptr_t)req.hint, VM_MAP_ANONYMOUS);
+    }
+
+    *out = obj.buf;
+
+    resp->_data.i32_val = 0;
+
+    return 0;
+}
+
 static int (*posix_funcs[])(PosixReq, PosixResponse *) = {
     [POSIX_OPEN] = open,
     [POSIX_WRITE] = write,
     [POSIX_STAT] = stat,
     [POSIX_SEEK] = seek,
     [POSIX_READ] = read,
+    [POSIX_CLOSE] = close,
+    [POSIX_READDIR] = readdir,
+    [POSIX_MMAP] = mmap,
 };
 
 void server_main(Charon *charon)
 {
     Port port = sys_alloc_port(PORT_RIGHT_RECV | PORT_RIGHT_SEND);
-
-    ichor_debug("My port is %d", port);
 
     ichor_debug("POSIX subsystem is going up");
 
@@ -119,7 +181,7 @@ void server_main(Charon *charon)
 
     tmpfs_init();
 
-    ichor_debug("Unpacking ramdisk");
+    ichor_debug("Unpacking ramdisk..");
 
     tar_write_on_tmpfs(ramdisk);
 

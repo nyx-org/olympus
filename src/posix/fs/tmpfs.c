@@ -233,7 +233,12 @@ static int tmpfs_readdir(Vnode *vn, void *buf, size_t max_size, size_t *bytes_re
 
         TmpDirent *tdent = tn->dir.entries.data[i];
 
-        dent->d_type = DT_UNKNOWN;
+        if (tdent->node->attr.type == VDIR)
+            dent->d_type = DT_DIR;
+        else if (tdent->node->attr.type == VREG)
+            dent->d_type = DT_REG;
+        else
+            dent->d_type = DT_UNKNOWN;
         dent->d_ino = (uintptr_t)tdent->node;
         dent->d_off++;
         dent->d_reclen = sizeof(struct dirent);

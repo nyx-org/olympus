@@ -233,3 +233,34 @@ int posix_sys_stat(Proc *proc, int fd, const char *path, struct stat *out)
 
     return 0;
 }
+
+int posix_sys_readdir(Proc *proc, int fd, void *buf, size_t max_size, size_t *bytes_read)
+{
+    File *file = NULL;
+    int r;
+    Vattr attr;
+
+    for (size_t i = 0; i < proc->fds.length; i++)
+    {
+        if (fd == proc->fds.data[i].fd)
+        {
+            file = &proc->fds.data[i];
+            break;
+        }
+    }
+
+    if (!file)
+        return -EBADF;
+
+    r = VOP_GETATTR(file->vnode, &attr);
+
+    if (r < 0)
+        return r;
+
+    if (attr.type != VDIR)
+        return -ENOTDIR;
+
+    r = VOP_READDIR(file->vnode, buf, max_size, bytes_read);
+
+    return r;
+}
