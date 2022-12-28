@@ -32,7 +32,7 @@ int posix_sys_open(Proc *proc, const char *path, int mode)
 
     vec_push(&proc->fds, new_file);
 
-    return 0;
+    return new_file.fd;
 }
 
 int posix_sys_read(Proc *proc, int fd, void *buf, size_t bytes)

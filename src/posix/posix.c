@@ -52,10 +52,18 @@ static int open(PosixReq request, PosixResponse *resp)
         procs[request.requests.open.pid] = ichor_malloc(sizeof(Proc));
         procs[request.requests.open.pid]->pid = request.requests.open.pid;
         vec_init(&procs[request.requests.open.pid]->fds);
+        File null_file = {0};
+        null_file.fd = procs[request.requests.open.pid]->current_fd++;
+        vec_push(&procs[request.requests.open.pid]->fds, null_file);
+        null_file.fd = procs[request.requests.open.pid]->current_fd++;
+        vec_push(&procs[request.requests.open.pid]->fds, null_file);
+        null_file.fd = procs[request.requests.open.pid]->current_fd++;
+        vec_push(&procs[request.requests.open.pid]->fds, null_file);
     }
 
     RESP_VAL(resp, i32) = posix_sys_open(procs[REQ_MEMBER(open, pid)], REQ_MEMBER(open, path), REQ_MEMBER(open, mode));
 
+    ichor_debug("%d", RESP_VAL(resp, i32));
     return 0;
 }
 
@@ -71,6 +79,13 @@ static int read(PosixReq request, PosixResponse *resp)
 static int write(PosixReq request, PosixResponse *resp)
 {
     void *buf = (void *)(GET_SHMD(request, requests.write.buf).address);
+
+    if (REQ_MEMBER(write, fd) == 1 || REQ_MEMBER(write, fd) == 2 || REQ_MEMBER(write, fd) == 0)
+    {
+        ichor_debug("%s", buf);
+        RESP_VAL(resp, i32) = REQ_MEMBER(write, buf_size);
+        return 0;
+    }
 
     RESP_VAL(resp, i32) = posix_sys_write(procs[REQ_MEMBER(write, pid)], REQ_MEMBER(write, fd), buf, REQ_MEMBER(write, buf_size));
 

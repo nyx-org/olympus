@@ -63,6 +63,7 @@ void server_main()
     int fd = open("/usr", 0);
     void *out = NULL;
 
+    ichor_debug("fd is %d", fd);
     struct dirent dirents[4];
 
     Task my_task;

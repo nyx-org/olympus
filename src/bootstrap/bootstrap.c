@@ -154,8 +154,6 @@ void server_main(Charon *charon)
         sys_exit(-1);
     }
 
-    ichor_debug("%p: %p", hello_module, posix_module);
-
     execute_task(hello_module, RIGHT_NULL);
     execute_task(posix_module, RIGHT_DMA | RIGHT_REGISTER_DMA);
 
