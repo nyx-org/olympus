@@ -1,5 +1,5 @@
 #include <fs/vfs.h>
-#include <posix/fnctl.h>
+#include <posix/fcntl.h>
 #include <posix/posix.h>
 
 int posix_sys_open(Proc *proc, const char *path, int mode)

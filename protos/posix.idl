@@ -1,4 +1,8 @@
 interface Posix {
-    i32 open(string256 name, i16 mode),
-    i32 close(i32 fd)
+    i32 open(i32 pid, string256 path, i32 mode),
+    i32 read(i32 pid, i32 fd, shared_ptr buf, i64 buf_size),
+    i32 write(i32 pid, i32 fd, shared_ptr buf, i64 buf_size),
+    i32 close(i32 pid, i32 fd),
+    i32 stat(i32 pid, i32 fd, string256 path, shared_ptr out, i64 out_size),
+    i32 seek(i32 pid, i32 fd, i64 offset, i32 whence)
 }

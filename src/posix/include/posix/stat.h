@@ -31,8 +31,6 @@
 #define S_IWRITE S_IWUSR
 #define S_IEXEC S_IXUSR
 
-// TODO
-
 struct stat
 {
     dev_t st_dev;

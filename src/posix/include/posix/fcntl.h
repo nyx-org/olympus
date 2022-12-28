@@ -1,5 +1,5 @@
-#ifndef POSIX_FNCTL_H
-#define POSIX_FNCTL_H
+#ifndef POSIX_FCNTL_H
+#define POSIX_FCNTL_H
 
 #define O_ACCMODE 0x0007
 #define O_EXEC 1
@@ -29,4 +29,4 @@
 
 #define AT_FDCWD -100
 
-#endif /* POSIX_FNCTL_H */
+#endif /* POSIX_FCNTL_H */

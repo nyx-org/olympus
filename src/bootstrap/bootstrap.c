@@ -79,6 +79,7 @@ static int look_up(BootstrapReq req, BootstrapResponse *resp)
     }
     else
     {
+        resp->header.type = PORT_MSG_TYPE_DEFAULT;
         resp->header.port_right = PORT_NULL;
     }
 
@@ -100,7 +101,7 @@ static void server_loop(Port port)
 
         if (msg.call > sizeof(funcs) / sizeof(funcs[0]))
         {
-            ichor_debug("Invalid call");
+            ichor_debug("Invalid call: %d", msg.call);
         }
         else
         {
