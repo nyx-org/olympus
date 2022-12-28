@@ -1,3 +1,5 @@
+#include "posix/errno.h"
+#include "posix/posix.h"
 #include <fs/tar.h>
 #include <fs/vfs.h>
 #include <ichor/base.h>
@@ -42,7 +44,7 @@ void tar_write_on_tmpfs(void *archive)
 
             if (ret < 0)
             {
-                ichor_debug("Failed making file %s", name);
+                ichor_debug("Failed making file %s, error is %s", name, ret == -ENOTDIR ? "enodir" : "dunno");
             }
 
             vfs_write(vn, (void *)current_file + 512, size, 0);
@@ -60,6 +62,7 @@ void tar_write_on_tmpfs(void *archive)
             {
                 ichor_debug("Failed making directory %s", name);
             }
+            break;
         }
         }
 

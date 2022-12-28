@@ -65,7 +65,7 @@ static TmpDirent *lookup_dirent(TmpNode *vn, const char *name)
 {
     for (size_t i = 0; i < vn->dir.entries.length; i++)
     {
-        if (strncmp(vn->dir.entries.data[i]->name, name, strlen(name)) == 0)
+        if (strncmp(vn->dir.entries.data[i]->name, name, strlen(vn->dir.entries.data[i]->name)) == 0)
             return vn->dir.entries.data[i];
     }
 
@@ -95,6 +95,8 @@ static int tmpfs_lookup(Vnode *vn, Vnode **out, const char *name)
 
 static int tmpfs_create(Vnode *vn, Vnode **out, const char *name, Vattr *attr)
 {
+
+    // ichor_debug("creating file in %p", vn);
 
     if (vn->type != VDIR)
     {
@@ -192,6 +194,9 @@ static int tmpfs_mkdir(Vnode *vn, Vnode **out, const char *name,
 
     tn = (TmpNode *)(*out)->data;
 
+    tn->attr.type = VDIR;
+    n->type = VDIR;
+
     n->data = tn;
 
     r = tmpfs_make_new_dir(*out, &n, "..", NULL);
@@ -274,6 +279,9 @@ void tmpfs_init(void)
     Vnode *n;
 
     tmpfs_make_vnode(&root_vnode, root_node);
+
+    root_node->vnode = root_vnode;
+    root_vnode->type = VDIR;
 
     tmpfs_make_new_dir(root_vnode, &n, "..", NULL);
 

@@ -56,7 +56,6 @@ void server_main()
     {
         if ((posix_port = bootstrap_look_up("org.nyx.posix")) != PORT_NULL)
         {
-            ichor_debug("Found posix!, port: %d", posix_port);
             break;
         }
     }

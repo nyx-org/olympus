@@ -136,7 +136,6 @@ static int mmap(PosixReq request, PosixResponse *resp)
     obj.size = req.size;
     size_t actual_flags = req.flags & 0xFFFFFFFF;
 
-    ichor_debug("Hi");
     if (actual_flags & MAP_ANONYMOUS)
     {
         uint16_t gaia_prot = 0;
@@ -184,6 +183,8 @@ void server_main(Charon *charon)
     ichor_debug("Unpacking ramdisk..");
 
     tar_write_on_tmpfs(ramdisk);
+
+    ichor_debug("Done");
 
     PosixReq request = {0};
 

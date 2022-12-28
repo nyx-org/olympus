@@ -121,7 +121,7 @@ static void server_loop(Port port)
 void server_main(Charon *charon)
 {
     Port port;
-    CharonModule *hello_module = NULL, *vfs_module = NULL;
+    CharonModule *hello_module = NULL, *posix_module = NULL;
 
     // We can receive and send from/to this port
     port = sys_alloc_port(PORT_RIGHT_RECV | PORT_RIGHT_SEND);
@@ -132,28 +132,32 @@ void server_main(Charon *charon)
 
     for (size_t i = 0; i < charon->modules.count; i++)
     {
-        if (strncmp(charon->modules.modules[i].name, "/hello.elf", 10) == 0)
+        if (strncmp(charon->modules.modules[i].name, "/hello.elf", strlen("/hello.elf")) == 0)
         {
             hello_module = &charon->modules.modules[i];
+            continue;
         }
 
         if (strncmp(charon->modules.modules[i].name, "/posix.elf", strlen("/posix.elf")) == 0)
         {
-            vfs_module = &charon->modules.modules[i];
+            posix_module = &charon->modules.modules[i];
+            continue;
         }
 
-        if (hello_module && vfs_module)
+        if (hello_module && posix_module)
             break;
     }
 
-    if (!hello_module)
+    if (!hello_module || !posix_module)
     {
         ichor_debug("Failed to find module.. hanging");
         sys_exit(-1);
     }
 
+    ichor_debug("%p: %p", hello_module, posix_module);
+
     execute_task(hello_module, RIGHT_NULL);
-    execute_task(vfs_module, RIGHT_DMA | RIGHT_REGISTER_DMA);
+    execute_task(posix_module, RIGHT_DMA | RIGHT_REGISTER_DMA);
 
     server_loop(port);
 
