@@ -7,9 +7,9 @@ arguments: [join_paths(meson.current_source_dir(), '../subprojects/hermes/main.p
 
 gen_src = gen.process(protos)
 
-generated_protos = static_library('protos', gen_src, dependencies: deps)
+generated_protos = static_library('protos', gen_src, c_args: c_args, link_args: link_args, dependencies: deps)
 
 protos_dep = declare_dependency(include_directories: generated_protos.private_dir_include(),
-  link_with: generated_protos, dependencies: deps, c_args: c_args, link_args: link_args)
+  link_with: generated_protos, dependencies: deps)
 
 deps += protos_dep
