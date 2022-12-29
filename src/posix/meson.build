@@ -1,4 +1,4 @@
-sources = files('posix.c')
+sources = files('posix.c', 'exec.c')
 
 subdir('fs')
 

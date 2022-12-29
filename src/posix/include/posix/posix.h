@@ -26,5 +26,7 @@ int posix_sys_seek(Proc *proc, int fd, off_t offset, int whence);
 int posix_sys_readdir(Proc *proc, int fd, void *buf, size_t max_size, size_t *bytes_read);
 int posix_sys_close(Proc *proc, int fd);
 int posix_sys_stat(Proc *proc, int fd, const char *path, struct stat *out);
+int posix_sys_fork(Proc *proc);
+int posix_sys_execve(Proc *proc, const char *path, char const *argv[], char const *envp[]);
 
 #endif /* POSIX_H */

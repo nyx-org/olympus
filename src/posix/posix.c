@@ -63,7 +63,6 @@ static int open(PosixReq request, PosixResponse *resp)
 
     RESP_VAL(resp, i32) = posix_sys_open(procs[REQ_MEMBER(open, pid)], REQ_MEMBER(open, path), REQ_MEMBER(open, mode));
 
-    ichor_debug("%d", RESP_VAL(resp, i32));
     return 0;
 }
 
@@ -82,7 +81,7 @@ static int write(PosixReq request, PosixResponse *resp)
 
     if (REQ_MEMBER(write, fd) == 1 || REQ_MEMBER(write, fd) == 2 || REQ_MEMBER(write, fd) == 0)
     {
-        ichor_debug("%s", buf);
+        ichor_debug("stdout: %s", buf);
         RESP_VAL(resp, i32) = REQ_MEMBER(write, buf_size);
         return 0;
     }
@@ -200,6 +199,13 @@ void server_main(Charon *charon)
     tar_write_on_tmpfs(ramdisk);
 
     ichor_debug("Done");
+
+    Proc *proc = ichor_malloc(sizeof(Proc));
+
+    posix_sys_fork(proc);
+    char *argv[] = {"/usr/bin/hello", NULL};
+    char *envp[] = {"SHELL=/bin/bash", NULL};
+    posix_sys_execve(proc, "/usr/bin/hello", (const char **)argv, (const char **)envp);
 
     PosixReq request = {0};
 

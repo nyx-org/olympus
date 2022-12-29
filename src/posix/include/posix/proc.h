@@ -5,12 +5,14 @@
 #include <vec.h>
 
 // Internal representation of a process
-typedef struct
+typedef struct proc
 {
     pid_t pid;
     int current_fd;
     Vec(File) fds;
     Vnode *cwd;
+    bool forked;
+    struct proc *parent;
 } Proc;
 
 #endif /* POSIX_PROC_H */
