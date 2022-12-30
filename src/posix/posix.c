@@ -149,18 +149,22 @@ static int mmap(PosixReq request, PosixResponse *resp)
     VmObject obj;
     obj.size = req.size;
     size_t actual_flags = req.flags & 0xFFFFFFFF;
+    uint16_t gaia_prot = 0;
 
-    if (actual_flags & MAP_ANONYMOUS)
+    if (req.prot & PROT_READ)
+        gaia_prot |= VM_PROT_READ;
+    if (req.prot & PROT_WRITE)
+        gaia_prot |= VM_PROT_WRITE;
+    if (req.prot & PROT_EXEC)
+        gaia_prot |= VM_PROT_EXEC;
+
+    if (actual_flags & MAP_FIXED)
     {
-        uint16_t gaia_prot = 0;
+        sys_vm_map(req.space, &obj, gaia_prot, (uintptr_t)req.hint, VM_MAP_FIXED);
+    }
 
-        if (req.prot & PROT_READ)
-            gaia_prot |= VM_PROT_READ;
-        if (req.prot & PROT_WRITE)
-            gaia_prot |= VM_PROT_WRITE;
-        if (req.prot & PROT_EXEC)
-            gaia_prot |= VM_PROT_EXEC;
-
+    else if (actual_flags & MAP_ANONYMOUS)
+    {
         sys_vm_map(req.space, &obj, gaia_prot, (uintptr_t)req.hint, VM_MAP_ANONYMOUS);
     }
 
@@ -203,7 +207,7 @@ void server_main(Charon *charon)
     Proc *proc = ichor_malloc(sizeof(Proc));
 
     posix_sys_fork(proc);
-    char *argv[] = {"/usr/bin/hello", NULL};
+    char *argv[] = {"/usr/bin/hello", "--version", NULL};
     char *envp[] = {"SHELL=/bin/bash", NULL};
     posix_sys_execve(proc, "/usr/bin/hello", (const char **)argv, (const char **)envp);
 
@@ -211,7 +215,9 @@ void server_main(Charon *charon)
 
     while (true)
     {
-        ichor_wait_for_message(port, sizeof(PosixReq), &request.header);
+        if (!sys_msg(PORT_RECV, port, sizeof(PosixReq), &request.header))
+            continue;
+
         PosixResponse resp = {0};
 
         resp.header.dest = request.header.port_right;
@@ -224,9 +230,9 @@ void server_main(Charon *charon)
         }
         else
         {
-            PosixResponse resp = {.header.size = sizeof(resp), .header.dest = request.header.port_right};
             posix_funcs[request.call](request, &resp);
 
+            // ichor_debug("POSIX: sending message of type %d", resp.header.type);
             sys_msg(PORT_SEND, PORT_NULL, -1, &resp.header);
         }
     }

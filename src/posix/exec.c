@@ -56,7 +56,7 @@ static uintptr_t load_elf(Task *task, Vnode *file, Auxval *auxval, uintptr_t bas
             VmObject obj = sys_vm_create(page_count * 4096, 0, 0);
             sys_vm_map(task->space, &obj, VM_PROT_READ | VM_PROT_WRITE | VM_PROT_EXEC, base + phdr.p_vaddr, VM_MAP_FIXED);
 
-            sys_vm_write(task->space, base + phdr.p_vaddr + misalign, (void *)(buf), phdr.p_filesz);
+            sys_vm_write(task->space, base + phdr.p_vaddr, (void *)(buf), phdr.p_filesz);
 
             ichor_free(buf);
             break;
@@ -205,13 +205,11 @@ int posix_sys_execve(Proc *proc, const char *path, char const *argv[], char cons
 
     *(--stack) = nargs; /* argc */
 
-    ichor_debug("Size: %p", required_size);
-
     VmObject stack_obj = sys_vm_create(8 * 1024 * 1024, 0, 0);
 
-    sys_vm_map(new_task.space, &stack_obj, VM_PROT_READ | VM_PROT_WRITE, USER_STACK_TOP - 8 * 1024 * 1024, VM_MAP_FIXED);
+    sys_vm_map(new_task.space, &stack_obj, VM_PROT_READ | VM_PROT_WRITE, USER_STACK_TOP - stack_obj.size, VM_MAP_FIXED);
 
-    sys_vm_write(new_task.space, stack_top - required_size, stack, required_size);
+    sys_vm_write(new_task.space, USER_STACK_TOP - required_size, stack, required_size);
 
     if (ld_path[0])
     {
@@ -221,7 +219,9 @@ int posix_sys_execve(Proc *proc, const char *path, char const *argv[], char cons
         r = vfs_find_and(NULL, &ldn, ld_path, VFS_FIND_OR_ERROR, &ld_attr);
 
         if (r < 0)
+        {
             POSIX_PANIC("error finding ld path");
+        }
 
         Auxval ld_aux = {0};
         r = load_elf(&new_task, ldn, &ld_aux, 0x40000000, NULL);
@@ -231,7 +231,6 @@ int posix_sys_execve(Proc *proc, const char *path, char const *argv[], char cons
             ichor_debug("error: %d", r);
             POSIX_PANIC("what");
         }
-        ichor_debug("at_entry: %p", ld_aux.at_entry);
         sys_start_task_stack(&new_task, ld_aux.at_entry, stack_top - required_size, false);
     }
     return 0;

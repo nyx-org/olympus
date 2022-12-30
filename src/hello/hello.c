@@ -52,7 +52,7 @@ static Port posix_port = PORT_NULL;
 
 void server_main()
 {
-    while (true)
+   /* while (true)
     {
         if ((posix_port = bootstrap_look_up("org.nyx.posix")) != PORT_NULL)
         {
@@ -80,6 +80,8 @@ void server_main()
     }
 
     close(fd);
+
+    sys_exit(0);*/
 
     sys_exit(0);
 }

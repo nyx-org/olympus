@@ -61,11 +61,20 @@ static TmpNode *tmpfs_make_node(TmpNode *dir, VnodeType type, const char *name, 
     return n;
 }
 
+static int
+strcmp(const char *s1, const char *s2)
+{
+	while (*s1 == *s2++)
+		if (*s1++ == 0)
+			return (0);
+	return (*(const unsigned char *)s1 - *(const unsigned char *)--s2);
+}
+
 static TmpDirent *lookup_dirent(TmpNode *vn, const char *name)
 {
     for (size_t i = 0; i < vn->dir.entries.length; i++)
     {
-        if (strncmp(vn->dir.entries.data[i]->name, name, strlen(vn->dir.entries.data[i]->name)) == 0)
+        if (strcmp(vn->dir.entries.data[i]->name, name) == 0)
             return vn->dir.entries.data[i];
     }
 

@@ -54,6 +54,7 @@ static int register_server(BootstrapReq req, BootstrapResponse *resp)
     Binding new_binding;
 
     strncpy(new_binding.name, req.requests.register_server.name, strlen(req.requests.register_server.name));
+
     new_binding.port = req.header.port_right;
 
     bindings[binding_count++] = new_binding;
@@ -64,6 +65,7 @@ static int register_server(BootstrapReq req, BootstrapResponse *resp)
 
 static int look_up(BootstrapReq req, BootstrapResponse *resp)
 {
+
     bool found = false;
 
     resp->header.type = PORT_MSG_TYPE_RIGHT;
@@ -111,6 +113,7 @@ static void server_loop(Port port)
         else
         {
             BootstrapResponse resp = {.header.size = sizeof(resp), .header.dest = msg.header.port_right};
+            resp.header.type = PORT_MSG_TYPE_DEFAULT;
             funcs[msg.call](msg, &resp);
 
             sys_msg(PORT_SEND, PORT_NULL, -1, &resp.header);

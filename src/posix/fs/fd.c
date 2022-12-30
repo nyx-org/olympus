@@ -5,8 +5,8 @@
 int posix_sys_open(Proc *proc, const char *path, int mode)
 {
     File new_file;
-    Vnode *vn;
-    int r;
+    Vnode *vn = NULL;
+    int r = 0;
 
     r = vfs_find_and(proc->cwd, &vn, path, VFS_FIND_OR_ERROR, NULL);
 
@@ -18,6 +18,10 @@ int posix_sys_open(Proc *proc, const char *path, int mode)
             return r;
     }
 
+    if(!vn && r < 0){
+        return r;
+    }
+
     if (vn->ops.open)
     {
         r = VOP_OPEN(vn, mode);
@@ -25,6 +29,7 @@ int posix_sys_open(Proc *proc, const char *path, int mode)
         if (r < 0)
             return r;
     }
+
 
     new_file.vnode = vn;
     new_file.position = 0;

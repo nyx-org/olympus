@@ -42,12 +42,14 @@ void tar_write_on_tmpfs(void *archive)
 
             ret = vfs_find_and(NULL, &vn, name, VFS_FIND_AND_CREATE, &attr);
 
+            // ichor_debug("Made new file %s with size %d", name, size);
             if (ret < 0)
             {
                 ichor_debug("Failed making file %s, error is %s", name, ret == -ENOTDIR ? "enodir" : "dunno");
             }
 
             vfs_write(vn, (void *)current_file + 512, size, 0);
+
             break;
         }
 
